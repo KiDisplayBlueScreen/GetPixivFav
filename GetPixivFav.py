@@ -108,6 +108,6 @@ if __name__ == '__main__':
     for i in Fav_Image_URL_List:
         print('No.' + str(j) + ' FavImage: ' + i + '\n')
         FavImageHtml = GetFavImagePage(Fav_Image_URL_List[j - 1], jar)
-        WriteFavImageFile(FavImageHtml.text, j + 1)
+        WriteFavImageFile(FavImageHtml.text,j)
         j = j + 1
         time.sleep(3)
