@@ -5,6 +5,7 @@ import requests
 from requests.cookies import RequestsCookieJar
 from lxml import etree
 import time
+import re
 
 # user data目录
 pro_dir = r'C:\Users\NTOSKRNL\AppData\Local\Google\Chrome\User Data'
@@ -94,20 +95,87 @@ def WriteFavImageFile(FavImageHtml_Text, Order):
     return 1
 
 
+def GetTempURL(HtmlPath):  # 参数为保存在本机的Html页面
+    Parser = etree.HTMLParser(encoding="utf-8")
+    Html = etree.parse(HtmlPath, parser=Parser)
+    Html_Data = etree.tostring(Html, encoding="utf-8")
+    Result = Html_Data.decode('utf-8')
+    ReExpression = '\"original\"'
+    ResultTuple = re.search(ReExpression, Result).span()  # 返回符合要求的子串的起始位置与结束位置
+    StartPos = ResultTuple[0] + 12
+    EndPos = ResultTuple[1] + 85
+    TempURL = Result[StartPos:EndPos]
+    return TempURL
+
+
+def FullImageURLGen(TempImageURL):
+    ImageURLPre = 'https://i.pximg.net/img-master/img/'
+    ImageURLSuffix = '_master1200.jpg'
+    ImageURLMain = TempImageURL[42:46] + '/' + TempImageURL[48:50] + '/' + TempImageURL[52:54] + '/' + TempImageURL[
+                                                                                                       56:58] + '/' + TempImageURL[
+                                                                                                                      60:62] + '/' + TempImageURL[
+                                                                                                                                     64:66] + '/' + TempImageURL[
+                                                                                                                                                    68:79]
+    FullImageURL = ImageURLPre + ImageURLMain + ImageURLSuffix
+    return FullImageURL
+
+
+def GetPixivID(ImageURL):
+    return ImageURL[55:63]
+
+
+def GetImage(ImageURL, jar, PixivID):
+    headers = \
+        {
+            "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36",
+            "Sec-Fetch-Mode": "no-cors",
+            "DNT": "1"
+        }
+    Ref = 'https://www.pixiv.net/artworks/' + PixivID  # 必须加上Referer字段否则报403
+    headers["Referer"] = Ref
+    try:
+        Image = se.get(ImageURL, cookies=jar, headers=headers)
+    except:
+        print('Get Fav Error')
+        print(requests.exceptions)
+        return 0
+    else:
+        print("Status Code: " + str(Image.status_code))
+        IsExist = os.path.exists(r'D:\PythonCode\Gallery Html Page\Image')
+        if not IsExist:
+            os.mkdir(r"D:\PythonCode\Gallery Html Page\Image")
+        FileHandle = open(r"D:\PythonCode\Gallery Html Page\Image\\" + (PixivID) + ".png", 'wb+')
+        FileHandle.write(Image.content)
+        FileHandle.close()
+        return 1
+
+
 if __name__ == '__main__':
     get_cookie()
     se = requests.session()  # 定义session对象
     jar = read_cookie()
     html = rep(jar)
     with open('FavImage.html', 'w+', encoding='utf8') as fp:
-        fp.write(html.text)  # 获取收藏页面
+        fp.write(html.text)  # 保存收藏页面为文件
     # os.system('start FavImage.html')  # 打开文件
     os.system('cls')
-    Fav_Image_URL_List = GetFavImageURL()  # 获取一个列表里面存放所有的收藏URL
+    Fav_Image_URL_List = GetFavImageURL()  # 创建一个列表里面存放所有的收藏URL
     j = 1
     for i in Fav_Image_URL_List:
         print('No.' + str(j) + ' FavImage: ' + i + '\n')
         FavImageHtml = GetFavImagePage(Fav_Image_URL_List[j - 1], jar)
-        WriteFavImageFile(FavImageHtml.text,j)
+        WriteFavImageFile(FavImageHtml.text, j)
         j = j + 1
         time.sleep(3)
+
+Path = os.listdir(r'D:\PythonCode\Gallery Html Page')
+j = 1
+for i in Path:
+    PagePath = r'D:\PythonCode\Gallery Html Page\\' + str(i)
+    TempURL = GetTempURL(PagePath)  # 获取临时路径
+    ImageURL = FullImageURLGen(TempURL)
+    print("No." + str(j) + " Image: " + ImageURL + '\n')  # 将临时路径转为真正路径
+    PixivID = GetPixivID(ImageURL)  # 获取PixivID
+    GetImage(ImageURL, jar, PixivID)
+    # print("No." + str(j) + " Image: " + ImageURL + '\n')
+    j = j + 1
