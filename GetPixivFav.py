@@ -111,11 +111,7 @@ def GetTempURL(HtmlPath):  # 参数为保存在本机的Html页面
 def FullImageURLGen(TempImageURL):
     ImageURLPre = 'https://i.pximg.net/img-original/img/'
     ImageURLSuffix = '.png'
-    ImageURLMain = TempImageURL[42:46] + '/' + TempImageURL[48:50] + '/' + TempImageURL[52:54] + '/' + TempImageURL[
-                                                                                                       56:58] + '/' + TempImageURL[
-                                                                                                                      60:62] + '/' + TempImageURL[
-                                                                                                                                     64:66] + '/' + TempImageURL[
-                                                                                                                                                    68:79]
+    ImageURLMain = TempImageURL[42:46] + '/' + TempImageURL[48:50] + '/' + TempImageURL[52:54] + '/' + TempImageURL[56:58] + '/' + TempImageURL[60:62] + '/' + TempImageURL[64:66] + '/' + TempImageURL[68:79]
     FullImageURL = ImageURLPre + ImageURLMain + ImageURLSuffix
     return FullImageURL
 
