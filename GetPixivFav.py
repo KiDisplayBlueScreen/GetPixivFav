@@ -10,6 +10,12 @@ import re
 # user data目录
 pro_dir = r'C:\Users\NTOSKRNL\AppData\Local\Google\Chrome\User Data'
 
+#图片下载保存目录
+SavePath = r"D:\Image\\"
+
+#临时保存图片所在页面目录
+FavPageSavePath = r'D:\PythonCode\Gallery Html Page'
+
 
 def get_cookie():
     # 添加配置
