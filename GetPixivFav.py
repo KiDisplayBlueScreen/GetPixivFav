@@ -48,6 +48,8 @@ def rep(jar, PageNum):
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) '
                       'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'}
     html = se.get(url, headers=headers, cookies=jar)
+    if html.status_code != 200:
+        return 0
     return html
 
 
@@ -156,11 +158,11 @@ def GetImage(ImageURL, jar, PixivID):
         FileHandle = open(r"D:\Image\\" + PixivID + ".png", 'wb+')
         FileHandle.write(Image.content)
         FileHandle.close()
-        GetMultiImage(ImageURL, jar, PixivID,headers)
+        GetMultiImage(ImageURL, jar, PixivID, headers)
         return 1
 
 
-def GetMultiImage(ImageURL, jar, PixivID,headers):
+def GetMultiImage(ImageURL, jar, PixivID, headers):
     i = 1
     while 1:
         if i > 10:
@@ -176,7 +178,7 @@ def GetMultiImage(ImageURL, jar, PixivID,headers):
             return 0
         else:
             if Image.status_code != 200:
-                print("This Page Does't have more than 1 Image or All of the Image have been Downloaded."+'\n')
+                print("This Page Does't have more than 1 Image or All of the Image have been Downloaded." + '\n')
                 return 0
             print("Get Multi Image Success")
             FileHandle = open(r"D:\Image\\" + PixivID + '_p' + str(i) + ".png", 'wb+')
@@ -186,10 +188,16 @@ def GetMultiImage(ImageURL, jar, PixivID,headers):
 
 
 if __name__ == '__main__':
-    get_cookie()  # 模拟本机浏览器行为获取Cookies
+    #get_cookie()  # 模拟本机浏览器行为获取Cookies
     se = requests.session()  # 定义session对象
     jar = read_cookie()  # 读取Cookies
-    html = rep(jar, 3)  # 获取收藏页面
+    PageNum = input("请输入你要下载哪一页:")
+    html = rep(jar, int(PageNum))  # 获取收藏页面
+    if html == 0:
+        get_cookie()
+        jar = read_cookie()
+        html = rep(jar, int(PageNum))
+
     with open('FavImage.html', 'w+', encoding='utf8') as fp:
         fp.write(html.text)  # 保存收藏页面为文件
     # os.system('start FavImage.html')  # 打开文件
