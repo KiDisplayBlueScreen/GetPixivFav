@@ -39,8 +39,9 @@ def read_cookie():
     return jar
 
 
-def rep(jar):
-    url = 'https://www.pixiv.net/bookmark.php'
+def rep(jar, PageNum):
+    Suffix = '?rest=show&p=' + str(PageNum)
+    url = 'https://www.pixiv.net/bookmark.php' + Suffix
     headers = {
         'referer': 'https://accounts.pixiv.net/login',
         'origin': 'https://accounts.pixiv.net',
@@ -54,8 +55,8 @@ def GetFavImageURL():
     ImageURL = 'https://www.pixiv.net/artworks/'
     Parser = etree.HTMLParser(encoding="utf-8")
     Html = etree.parse(r'D:\Python32\FavImage.html', parser=Parser)
-    #Html_Data = etree.tostring(Html, encoding="utf-8")
-    #Result = Html_Data.decode('utf-8')
+    # Html_Data = etree.tostring(Html, encoding="utf-8")
+    # Result = Html_Data.decode('utf-8')
 
     XPath_GetImageURL = '//li[@class="image-item"]/a[1]/@href'
     Fav_Image_URL = Html.xpath(XPath_GetImageURL)
@@ -141,13 +142,13 @@ def GetImage(ImageURL, jar, PixivID):
         return 0
     else:
         if Image.status_code == 200:
-            print("Get Image Success."+'\n')
+            print("Get Image Success." + '\n')
         if Image.status_code == 404:
             print("Get Image Fail,Try to Change The URL...")
             ImageURL2 = ImageURL[0:57] + PixivID + '_p0.jpg'
             Image = se.get(ImageURL2, cookies=jar, headers=headers)
             if Image.status_code == 200:
-                print("Get Image Success."+'\n')
+                print("Get Image Success." + '\n')
 
         IsExist = os.path.exists(r'D:\Image')
         if not IsExist:
@@ -162,7 +163,7 @@ if __name__ == '__main__':
     get_cookie()  # 模拟本机浏览器行为获取Cookies
     se = requests.session()  # 定义session对象
     jar = read_cookie()  # 读取Cookies
-    html = rep(jar)  # 获取收藏页面
+    html = rep(jar, 3)  # 获取收藏页面
     with open('FavImage.html', 'w+', encoding='utf8') as fp:
         fp.write(html.text)  # 保存收藏页面为文件
     # os.system('start FavImage.html')  # 打开文件
@@ -191,4 +192,3 @@ for i in Path:
 
 for i in Path:
     os.remove(r'D:\PythonCode\Gallery Html Page\\' + str(i))
-
