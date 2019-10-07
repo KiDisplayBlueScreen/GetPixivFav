@@ -163,7 +163,10 @@ def GetImage(ImageURL, jar, PixivID):
 def GetMultiImage(ImageURL, jar, PixivID,headers):
     i = 1
     while 1:
-        ImageURL = ImageURL[0:67] + str(i) + ImageURL[68:]
+        if i > 10:
+            ImageURL = ImageURL[0:67] + str(i) + ImageURL[69:]
+        else:
+            ImageURL = ImageURL[0:67] + str(i) + ImageURL[68:]
         print("Try Multi Image URL: " + ImageURL)
         try:
             Image = se.get(ImageURL, cookies=jar, headers=headers)
