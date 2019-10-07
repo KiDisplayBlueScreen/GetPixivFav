@@ -57,9 +57,6 @@ def GetFavImageURL():
     ImageURL = 'https://www.pixiv.net/artworks/'
     Parser = etree.HTMLParser(encoding="utf-8")
     Html = etree.parse(r'D:\Python32\FavImage.html', parser=Parser)
-    # Html_Data = etree.tostring(Html, encoding="utf-8")
-    # Result = Html_Data.decode('utf-8')
-
     XPath_GetImageURL = '//li[@class="image-item"]/a[1]/@href'
     Fav_Image_URL = Html.xpath(XPath_GetImageURL)
     Fav_Image_URL_List = []
@@ -88,11 +85,11 @@ def GetFavImagePage(FavImageURL, jar):
         return Html
 
 
-def WriteFavImageFile(FavImageHtml_Text, Order):
-    IsExist = os.path.exists(r'D:\PythonCode\Gallery Html Page')
+def WriteFavImageFile(FavImageHtml_Text, Order, FavPageSavePath):
+    IsExist = os.path.exists(FavPageSavePath)
     if not IsExist:
-        os.mkdir(r"D:\PythonCode\Gallery Html Page")
-    FileHandle = open(r"D:\PythonCode\Gallery Html Page\\" + str(Order) + ".html", 'w+', encoding='utf-8')
+        os.mkdir(FavPageSavePath)
+    FileHandle = open(FavPageSavePath + '\\' + str(Order) + ".html", 'w+', encoding='utf-8')
     FileHandle.write(FavImageHtml_Text)
     FileHandle.close()
     return 1
@@ -127,7 +124,7 @@ def GetPixivID(ImageURL):
     return ImageURL[57:65]
 
 
-def GetImage(ImageURL, jar, PixivID):
+def GetImage(ImageURL, jar, PixivID, SavePath):
     headers = \
         {
             "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36",
@@ -152,10 +149,10 @@ def GetImage(ImageURL, jar, PixivID):
             if Image.status_code == 200:
                 print("Get Image Success." + '\n')
 
-        IsExist = os.path.exists(r'D:\Image')
+        IsExist = os.path.exists(SavePath)
         if not IsExist:
-            os.mkdir(r"D:\Image")
-        FileHandle = open(r"D:\Image\\" + PixivID + ".png", 'wb+')
+            os.mkdir(SavePath)
+        FileHandle = open(SavePath + PixivID + ".png", 'wb+')
         FileHandle.write(Image.content)
         FileHandle.close()
         GetMultiImage(ImageURL, jar, PixivID, headers)
@@ -181,16 +178,19 @@ def GetMultiImage(ImageURL, jar, PixivID, headers):
                 print("This Page Does't have more than 1 Image or All of the Image have been Downloaded." + '\n')
                 return 0
             print("Get Multi Image Success")
-            FileHandle = open(r"D:\Image\\" + PixivID + '_p' + str(i) + ".png", 'wb+')
+            FileHandle = open(SavePath + PixivID + '_p' + str(i) + ".png", 'wb+')
             FileHandle.write(Image.content)
             FileHandle.close()
             i = i + 1
 
 
 if __name__ == '__main__':
-    #get_cookie()  # 模拟本机浏览器行为获取Cookies
+    # get_cookie()  # 模拟本机浏览器行为获取Cookies
+    SavePath = r"D:\Image\\"
+    FavPageSavePath = r'D:\PythonCode\Gallery Html Page'
     se = requests.session()  # 定义session对象
     jar = read_cookie()  # 读取Cookies
+
     PageNum = input("请输入你要下载哪一页:")
     html = rep(jar, int(PageNum))  # 获取收藏页面
     if html == 0:
@@ -207,22 +207,24 @@ if __name__ == '__main__':
     for i in Fav_Image_URL_List:
         print('No.' + str(j) + ' FavImage: ' + i + '\n')
         FavImageHtml = GetFavImagePage(Fav_Image_URL_List[j - 1], jar)  # 依次获取所有收藏图片的页面
-        WriteFavImageFile(FavImageHtml.text, j)  # 保存到本地
+        WriteFavImageFile(FavImageHtml.text, j, FavPageSavePath)  # 保存到本地
         j = j + 1
         time.sleep(3)
 
 os.remove('FavImage.html')
-Path = os.listdir(r'D:\PythonCode\Gallery Html Page')
+Path = os.listdir(FavPageSavePath)
 j = 1
 for i in Path:
-    PagePath = r'D:\PythonCode\Gallery Html Page\\' + str(i)
+    PagePath = FavPageSavePath + '\\' + str(i)
     TempURL = GetTempURL(PagePath)  # 获取临时路径
     ImageURL = FullImageURLGen(TempURL)  # 从临时路径中获取真正的图片URL
     print("No." + str(j) + " Image: " + ImageURL)  # 将临时路径转为真正路径
     PixivID = GetPixivID(ImageURL)  # 获取PixivID
-    GetImage(ImageURL, jar, PixivID)
+    GetImage(ImageURL, jar, PixivID, SavePath)
     # print("No." + str(j) + " Image: " + ImageURL + '\n')
     j = j + 1
 
 for i in Path:
     os.remove(r'D:\PythonCode\Gallery Html Page\\' + str(i))
+
+os.system("explorer.exe "+SavePath[0:8])
