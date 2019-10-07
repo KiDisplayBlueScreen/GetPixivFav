@@ -54,8 +54,8 @@ def GetFavImageURL():
     ImageURL = 'https://www.pixiv.net/artworks/'
     Parser = etree.HTMLParser(encoding="utf-8")
     Html = etree.parse(r'D:\Python32\FavImage.html', parser=Parser)
-    Html_Data = etree.tostring(Html, encoding="utf-8")
-    Result = Html_Data.decode('utf-8')
+    #Html_Data = etree.tostring(Html, encoding="utf-8")
+    #Result = Html_Data.decode('utf-8')
 
     XPath_GetImageURL = '//li[@class="image-item"]/a[1]/@href'
     Fav_Image_URL = Html.xpath(XPath_GetImageURL)
@@ -109,8 +109,8 @@ def GetTempURL(HtmlPath):  # 参数为保存在本机的Html页面
 
 
 def FullImageURLGen(TempImageURL):
-    ImageURLPre = 'https://i.pximg.net/img-master/img/'
-    ImageURLSuffix = '_master1200.jpg'
+    ImageURLPre = 'https://i.pximg.net/img-original/img/'
+    ImageURLSuffix = '.png'
     ImageURLMain = TempImageURL[42:46] + '/' + TempImageURL[48:50] + '/' + TempImageURL[52:54] + '/' + TempImageURL[
                                                                                                        56:58] + '/' + TempImageURL[
                                                                                                                       60:62] + '/' + TempImageURL[
@@ -121,17 +121,17 @@ def FullImageURLGen(TempImageURL):
 
 
 def GetPixivID(ImageURL):
-    return ImageURL[55:63]
+    return ImageURL[57:65]
 
 
 def GetImage(ImageURL, jar, PixivID):
     headers = \
         {
             "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36",
-            "Sec-Fetch-Mode": "no-cors",
-            "DNT": "1"
+            'Host': 'i.pximg.net',
+            'Accept': '*.*'
         }
-    Ref = 'https://www.pixiv.net/artworks/' + PixivID  # 必须加上Referer字段否则报403
+    Ref = ImageURL[0:57]  # 必须加上Referer字段否则报404
     headers["Referer"] = Ref
     try:
         Image = se.get(ImageURL, cookies=jar, headers=headers)
@@ -140,21 +140,29 @@ def GetImage(ImageURL, jar, PixivID):
         print(requests.exceptions)
         return 0
     else:
-        print("Status Code: " + str(Image.status_code))
-        IsExist = os.path.exists(r'D:\PythonCode\Gallery Html Page\Image')
+        if Image.status_code == 200:
+            print("Get Image Success."+'\n')
+        if Image.status_code == 404:
+            print("Get Image Fail,Try to Change The URL...")
+            ImageURL2 = ImageURL[0:57] + PixivID + '_p0.jpg'
+            Image = se.get(ImageURL2, cookies=jar, headers=headers)
+            if Image.status_code == 200:
+                print("Get Image Success."+'\n')
+
+        IsExist = os.path.exists(r'D:\Image')
         if not IsExist:
-            os.mkdir(r"D:\PythonCode\Gallery Html Page\Image")
-        FileHandle = open(r"D:\PythonCode\Gallery Html Page\Image\\" + (PixivID) + ".png", 'wb+')
+            os.mkdir(r"D:\Image")
+        FileHandle = open(r"D:\Image\\" + PixivID + ".png", 'wb+')
         FileHandle.write(Image.content)
         FileHandle.close()
         return 1
 
 
 if __name__ == '__main__':
-    get_cookie()
+    get_cookie()  # 模拟本机浏览器行为获取Cookies
     se = requests.session()  # 定义session对象
-    jar = read_cookie()
-    html = rep(jar)
+    jar = read_cookie()  # 读取Cookies
+    html = rep(jar)  # 获取收藏页面
     with open('FavImage.html', 'w+', encoding='utf8') as fp:
         fp.write(html.text)  # 保存收藏页面为文件
     # os.system('start FavImage.html')  # 打开文件
@@ -163,19 +171,24 @@ if __name__ == '__main__':
     j = 1
     for i in Fav_Image_URL_List:
         print('No.' + str(j) + ' FavImage: ' + i + '\n')
-        FavImageHtml = GetFavImagePage(Fav_Image_URL_List[j - 1], jar)
-        WriteFavImageFile(FavImageHtml.text, j)
+        FavImageHtml = GetFavImagePage(Fav_Image_URL_List[j - 1], jar)  # 依次获取所有收藏图片的页面
+        WriteFavImageFile(FavImageHtml.text, j)  # 保存到本地
         j = j + 1
         time.sleep(3)
 
+os.remove('FavImage.html')
 Path = os.listdir(r'D:\PythonCode\Gallery Html Page')
 j = 1
 for i in Path:
     PagePath = r'D:\PythonCode\Gallery Html Page\\' + str(i)
     TempURL = GetTempURL(PagePath)  # 获取临时路径
-    ImageURL = FullImageURLGen(TempURL)
-    print("No." + str(j) + " Image: " + ImageURL + '\n')  # 将临时路径转为真正路径
+    ImageURL = FullImageURLGen(TempURL)  # 从临时路径中获取真正的图片URL
+    print("No." + str(j) + " Image: " + ImageURL)  # 将临时路径转为真正路径
     PixivID = GetPixivID(ImageURL)  # 获取PixivID
     GetImage(ImageURL, jar, PixivID)
     # print("No." + str(j) + " Image: " + ImageURL + '\n')
     j = j + 1
+
+for i in Path:
+    os.remove(r'D:\PythonCode\Gallery Html Page\\' + str(i))
+
