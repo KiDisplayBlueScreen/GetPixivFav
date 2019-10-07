@@ -145,8 +145,8 @@ def GetImage(ImageURL, jar, PixivID):
             print("Get Image Success." + '\n')
         if Image.status_code == 404:
             print("Get Image Fail,Try to Change The URL...")
-            ImageURL2 = ImageURL[0:57] + PixivID + '_p0.jpg'
-            Image = se.get(ImageURL2, cookies=jar, headers=headers)
+            ImageURL = ImageURL[0:57] + PixivID + '_p0.jpg'
+            Image = se.get(ImageURL, cookies=jar, headers=headers)
             if Image.status_code == 200:
                 print("Get Image Success." + '\n')
 
@@ -156,7 +156,30 @@ def GetImage(ImageURL, jar, PixivID):
         FileHandle = open(r"D:\Image\\" + PixivID + ".png", 'wb+')
         FileHandle.write(Image.content)
         FileHandle.close()
+        GetMultiImage(ImageURL, jar, PixivID,headers)
         return 1
+
+
+def GetMultiImage(ImageURL, jar, PixivID,headers):
+    i = 1
+    while 1:
+        ImageURL = ImageURL[0:67] + str(i) + ImageURL[68:]
+        print("Try Multi Image URL: " + ImageURL)
+        try:
+            Image = se.get(ImageURL, cookies=jar, headers=headers)
+        except:
+            print('Get Multi Image Error')
+            print(requests.exceptions)
+            return 0
+        else:
+            if Image.status_code != 200:
+                print("This Page Does't have more than 1 Image or All of the Image have been Downloaded."+'\n')
+                return 0
+            print("Get Multi Image Success")
+            FileHandle = open(r"D:\Image\\" + PixivID + '_p' + str(i) + ".png", 'wb+')
+            FileHandle.write(Image.content)
+            FileHandle.close()
+            i = i + 1
 
 
 if __name__ == '__main__':
