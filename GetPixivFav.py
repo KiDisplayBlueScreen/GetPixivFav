@@ -188,8 +188,6 @@ def GetMultiImage(ImageURL, jar, PixivID, headers):
 
 if __name__ == '__main__':
     # get_cookie()  # 模拟本机浏览器行为获取Cookies
-    SavePath = r"D:\Image\\"
-    FavPageSavePath = r'D:\PythonCode\Gallery Html Page'
     se = requests.session()  # 定义session对象
     jar = read_cookie()  # 读取Cookies
 
