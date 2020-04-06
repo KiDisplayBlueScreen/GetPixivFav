@@ -60,9 +60,9 @@ def rep(jar, PageNum):
 
 
 def GetFavImageURL():
-    ImageURL = 'https://www.pixiv.net/artworks/'
+    ImageURL = 'https://www.pixiv.net'
     Parser = etree.HTMLParser(encoding="utf-8")
-    Html = etree.parse(r'D:\Python32\FavImage.html', parser=Parser)
+    Html = etree.parse(r'C:\Program Files (x86)\Python32\FavImage.html', parser=Parser)
     XPath_GetImageURL = '//li[@class="image-item"]/a[1]/@href'
     Fav_Image_URL = Html.xpath(XPath_GetImageURL)
     Fav_Image_URL_List = []
@@ -70,7 +70,7 @@ def GetFavImageURL():
     j = 1
     for i in Fav_Image_URL:
         # print("No." + str(j) + " " + i)
-        Fav_Image_URL_List.append(ImageURL + Fav_Image_URL[j - 1][40:])
+        Fav_Image_URL_List.append(ImageURL + Fav_Image_URL[j - 1][0:])
         j = j + 1
     return Fav_Image_URL_List
 
@@ -106,10 +106,10 @@ def GetTempURL(HtmlPath):  # 参数为保存在本机的Html页面
     Html = etree.parse(HtmlPath, parser=Parser)
     Html_Data = etree.tostring(Html, encoding="utf-8")
     Result = Html_Data.decode('utf-8')
-    ReExpression = '\"original\"'
+    ReExpression = 'https://i.pximg.net/img-original/'
     ResultTuple = re.search(ReExpression, Result).span()  # 返回符合要求的子串的起始位置与结束位置
-    StartPos = ResultTuple[0] + 12
-    EndPos = ResultTuple[1] + 85
+    StartPos = ResultTuple[0]
+    EndPos = ResultTuple[1] + 39
     TempURL = Result[StartPos:EndPos]
     return TempURL
 
@@ -117,7 +117,11 @@ def GetTempURL(HtmlPath):  # 参数为保存在本机的Html页面
 def FullImageURLGen(TempImageURL):
     ImageURLPre = 'https://i.pximg.net/img-original/img/'
     ImageURLSuffix = '.png'
-    ImageURLMain = TempImageURL[42:46] + '/' + TempImageURL[48:50] + '/' + TempImageURL[52:54] + '/' + TempImageURL[56:58] + '/' + TempImageURL[60:62] + '/' + TempImageURL[64:66] + '/' + TempImageURL[68:79]
+    ImageURLMain = TempImageURL[42:46] + '/' + TempImageURL[48:50] + '/' + TempImageURL[52:54] + '/' + TempImageURL[
+                                                                                                       56:58] + '/' + TempImageURL[
+                                                                                                                      60:62] + '/' + TempImageURL[
+                                                                                                                                     64:66] + '/' + TempImageURL[
+                                                                                                                                                    68:79]
     FullImageURL = ImageURLPre + ImageURLMain + ImageURLSuffix
     return FullImageURL
 
@@ -187,7 +191,7 @@ def GetMultiImage(ImageURL, jar, PixivID, headers):
 
 
 if __name__ == '__main__':
-    # get_cookie()  # 模拟本机浏览器行为获取Cookies
+    #get_cookie()  # 模拟本机浏览器行为获取Cookies
     se = requests.session()  # 定义session对象
     jar = read_cookie()  # 读取Cookies
 
@@ -216,9 +220,8 @@ Path = os.listdir(FavPageSavePath)
 j = 1
 for i in Path:
     PagePath = FavPageSavePath + '\\' + str(i)
-    TempURL = GetTempURL(PagePath)  # 获取临时路径
-    ImageURL = FullImageURLGen(TempURL)  # 从临时路径中获取真正的图片URL
-    print("No." + str(j) + " Image: " + ImageURL)  # 将临时路径转为真正路径
+    ImageURL = GetTempURL(PagePath)  # 获取路径
+    print("No." + str(j) + " Image: " + ImageURL) 
     PixivID = GetPixivID(ImageURL)  # 获取PixivID
     GetImage(ImageURL, jar, PixivID, SavePath)
     # print("No." + str(j) + " Image: " + ImageURL + '\n')
